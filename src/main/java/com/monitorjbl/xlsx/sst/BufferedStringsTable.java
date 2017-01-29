@@ -23,7 +23,7 @@ public class BufferedStringsTable extends SharedStringsTable implements AutoClos
   private final FileBackedList<CTRstImpl> list;
 
   private BufferedStringsTable(PackagePart part, PackageRelationship rel, File file, int cacheSize) throws IOException {
-    this.list = new FileBackedList<>(CTRstImpl.class, file, cacheSize);
+    this.list = new FileBackedList<CTRstImpl>(CTRstImpl.class, file, cacheSize);
     readFrom(part.getInputStream());
   }
 
@@ -51,15 +51,14 @@ public class BufferedStringsTable extends SharedStringsTable implements AutoClos
 
   private CTRstImpl parseCTRst(XMLEventReader xmlEventReader) throws XMLStreamException {
     StartElement ele = xmlEventReader.nextEvent().asStartElement();
-
-    switch(ele.getName().getLocalPart()) {
-      case "t":
-        Characters chars = xmlEventReader.nextEvent().asCharacters();
+    String localPart = ele.getName().getLocalPart();
+    
+    if ("t".equals(localPart)) {
+    	Characters chars = xmlEventReader.nextEvent().asCharacters();
         return new CTRstImpl(chars.getData());
-      case "phoneticPr":
-      case "rPh;":
-      case "r":
-        return null;
+        
+    } else if ("phoneticPr".equals(localPart) || "rPh".equals(localPart) || "r".equals(localPart)) {
+    	return null;
     }
     throw new IllegalArgumentException("");
   }

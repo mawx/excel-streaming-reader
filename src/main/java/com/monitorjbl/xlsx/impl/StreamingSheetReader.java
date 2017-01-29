@@ -40,11 +40,11 @@ public class StreamingSheetReader implements Iterable<Row> {
   private final StylesTable stylesTable;
   private final XMLEventReader parser;
   private final DataFormatter dataFormatter = new DataFormatter();
-  private final Set<Integer> hiddenColumns = new HashSet<>();
+  private final Set<Integer> hiddenColumns = new HashSet<Integer>();
 
   private int lastRowNum;
   private int rowCacheSize;
-  private List<Row> rowCache = new ArrayList<>();
+  private List<Row> rowCache = new ArrayList<Row>();
   private Iterator<Row> rowCacheIterator;
 
   private String lastContents;
@@ -73,7 +73,9 @@ public class StreamingSheetReader implements Iterable<Row> {
       }
       rowCacheIterator = rowCache.iterator();
       return rowCacheIterator.hasNext();
-    } catch(XMLStreamException | SAXException e) {
+    } catch(XMLStreamException e) {
+      log.debug("End of stream");
+    } catch (SAXException e) {
       log.debug("End of stream");
     }
     return false;
@@ -255,17 +257,20 @@ public class StreamingSheetReader implements Iterable<Row> {
    * @return
    */
   String formattedContents() {
-    switch(currentCell.getType()) {
-      case "s":           //string stored in shared table
+	String type = currentCell.getType();
+    if ("s".equals(type)) { 				//string stored in shared table
         int idx = Integer.parseInt(lastContents);
         return new XSSFRichTextString(sst.getEntryAt(idx)).toString();
-      case "inlineStr":   //inline string (not in sst)
+        
+    } else if ("inlineStr".equals(type)) {	//inline string (not in sst)
         return new XSSFRichTextString(lastContents).toString();
-      case "str":         //forumla type
+        
+    } else if ("str".equals(type)) {		//forumla type
         return '"' + lastContents + '"';
-      case "e":           //error type
+    } else if ("e".equals(type)) {			//error type
         return "ERROR:  " + lastContents;
-      case "n":           //numeric type
+        
+    } else if ("n".equals(type)) {			//numeric type
         if(currentCell.getNumericFormat() != null && lastContents.length() > 0) {
           return dataFormatter.formatRawCellContents(
               Double.parseDouble(lastContents),
@@ -274,7 +279,8 @@ public class StreamingSheetReader implements Iterable<Row> {
         } else {
           return lastContents;
         }
-      default:
+        
+    } else {
         return lastContents;
     }
   }
@@ -285,13 +291,16 @@ public class StreamingSheetReader implements Iterable<Row> {
    * @return
    */
   String unformattedContents() {
-    switch(currentCell.getType()) {
-      case "s":           //string stored in shared table
+	String type = currentCell.getType();
+	
+    if ("s".equals(type)) {           		//string stored in shared table
         int idx = Integer.parseInt(lastContents);
         return new XSSFRichTextString(sst.getEntryAt(idx)).toString();
-      case "inlineStr":   //inline string (not in sst)
+        
+    } else if ("inlineStr".equals(type)) {	//inline string (not in sst)
         return new XSSFRichTextString(lastContents).toString();
-      default:
+        
+    } else {
         return lastContents;
     }
   }
@@ -318,7 +327,9 @@ public class StreamingSheetReader implements Iterable<Row> {
 
   static File writeInputStreamToFile(InputStream is, int bufferSize) throws IOException {
     File f = Files.createTempFile("tmp-", ".xlsx").toFile();
-    try(FileOutputStream fos = new FileOutputStream(f)) {
+    FileOutputStream fos = null;
+    try {
+      fos = new FileOutputStream(f);
       int read;
       byte[] bytes = new byte[bufferSize];
       while((read = is.read(bytes)) != -1) {
@@ -326,8 +337,11 @@ public class StreamingSheetReader implements Iterable<Row> {
       }
       is.close();
       fos.close();
-      return f;
+    } catch (IOException e) {
+    	is.close();
+    	fos.close();
     }
+    return f;
   }
 
   class StreamingRowIterator implements Iterator<Row> {

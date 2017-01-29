@@ -20,23 +20,23 @@ public class StreamingSheetTest {
 
   @Test
   public void testLastRowNum() throws Exception {
-    try(
-        InputStream is = new FileInputStream(new File("src/test/resources/large.xlsx"));
-        Workbook workbook = StreamingReader.builder().open(is);
-    ) {
+      InputStream is = new FileInputStream(new File("src/test/resources/large.xlsx"));
+      Workbook workbook = StreamingReader.builder().open(is);
       assertEquals(1, workbook.getNumberOfSheets());
       Sheet sheet = workbook.getSheetAt(0);
       assertEquals(24, sheet.getLastRowNum());
-    }
+      
+      workbook.close();
+      is.close();
 
-    try(
-        InputStream is = new FileInputStream(new File("src/test/resources/empty_sheet.xlsx"));
-        Workbook workbook = StreamingReader.builder().open(is);
-    ) {
+      is = new FileInputStream(new File("src/test/resources/empty_sheet.xlsx"));
+      workbook = StreamingReader.builder().open(is);
       assertEquals(1, workbook.getNumberOfSheets());
-      Sheet sheet = workbook.getSheetAt(0);
+      sheet = workbook.getSheetAt(0);
       assertEquals(0, sheet.getLastRowNum());
-    }
+      
+      workbook.close();
+      is.close();
   }
 
 }

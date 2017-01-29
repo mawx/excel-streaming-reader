@@ -13,7 +13,7 @@ import java.util.TreeMap;
 public class StreamingRow implements Row {
   private int rowIndex;
   private boolean isHidden;
-  private TreeMap<Integer, Cell> cellMap = new TreeMap<>();
+  private TreeMap<Integer, Cell> cellMap = new TreeMap<Integer, Cell>();
 
   public StreamingRow(int rowIndex, boolean isHidden) {
     this.rowIndex = rowIndex;

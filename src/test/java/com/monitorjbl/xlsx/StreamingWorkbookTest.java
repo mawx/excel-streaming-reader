@@ -27,10 +27,8 @@ public class StreamingWorkbookTest {
 
   @Test
   public void testIterateSheets() throws Exception {
-    try(
-        InputStream is = new FileInputStream(new File("src/test/resources/sheets.xlsx"));
-        Workbook workbook = StreamingReader.builder().open(is);
-    ) {
+      InputStream is = new FileInputStream(new File("src/test/resources/sheets.xlsx"));
+      Workbook workbook = StreamingReader.builder().open(is);
 
       assertEquals(2, workbook.getNumberOfSheets());
 
@@ -44,15 +42,16 @@ public class StreamingWorkbookTest {
 
       assertEquals("stuff", rowA.getCell(0).getStringCellValue());
       assertEquals("yeah", rowZ.getCell(0).getStringCellValue());
-    }
+      
+      workbook.close();
+      is.close();
   }
 
   @Test
   public void testHiddenCells() throws Exception {
-    try(
-        InputStream is = new FileInputStream(new File("src/test/resources/hidden.xlsx"));
-        Workbook workbook = StreamingReader.builder().open(is)
-    ) {
+      InputStream is = new FileInputStream(new File("src/test/resources/hidden.xlsx"));
+      Workbook workbook = StreamingReader.builder().open(is);
+      
       assertEquals(3, workbook.getNumberOfSheets());
       Sheet sheet = workbook.getSheetAt(0);
 
@@ -63,15 +62,16 @@ public class StreamingWorkbookTest {
       assertFalse("Row 0 should not be hidden", sheet.rowIterator().next().getZeroHeight());
       assertTrue("Row 1 should be hidden", sheet.rowIterator().next().getZeroHeight());
       assertFalse("Row 2 should not be hidden", sheet.rowIterator().next().getZeroHeight());
-    }
+      
+      workbook.close();
+      is.close();
   }
 
   @Test
   public void testHiddenSheets() throws Exception {
-    try(
-        InputStream is = new FileInputStream(new File("src/test/resources/hidden.xlsx"));
-        Workbook workbook = StreamingReader.builder().open(is)
-    ) {
+      InputStream is = new FileInputStream(new File("src/test/resources/hidden.xlsx"));
+      Workbook workbook = StreamingReader.builder().open(is);
+      
       assertEquals(3, workbook.getNumberOfSheets());
       assertFalse(workbook.isSheetHidden(0));
 
@@ -80,15 +80,16 @@ public class StreamingWorkbookTest {
 
       assertFalse(workbook.isSheetHidden(2));
       assertTrue(workbook.isSheetVeryHidden(2));
-    }
+      
+      workbook.close();
+      is.close();
   }
 
   @Test
   public void testFormulaCells() throws Exception {
-    try(
-        InputStream is = new FileInputStream(new File("src/test/resources/formula_cell.xlsx"));
-        Workbook workbook = StreamingReader.builder().open(is)
-    ) {
+      InputStream is = new FileInputStream(new File("src/test/resources/formula_cell.xlsx"));
+      Workbook workbook = StreamingReader.builder().open(is);
+      
       assertEquals(1, workbook.getNumberOfSheets());
       Sheet sheet = workbook.getSheetAt(0);
 
@@ -101,6 +102,8 @@ public class StreamingWorkbookTest {
       assertEquals("Cell A3 should be of type formula", CELL_TYPE_FORMULA, A3.getCellType());
       assertEquals("Cell A3's value should be of type numeric", CELL_TYPE_NUMERIC, A3.getCachedFormulaResultType());
       assertEquals("Wrong formula", "SUM(A1:A2)", A3.getCellFormula());
-    }
+
+      workbook.close();
+      is.close();
   }
 }

@@ -42,7 +42,7 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, AutoCloseable {
   private static final Logger log = LoggerFactory.getLogger(StreamingWorkbookReader.class);
 
   private final List<StreamingSheet> sheets;
-  private final List<Map<String, String>> sheetProperties = new ArrayList<>();
+  private final List<Map<String, String>> sheetProperties = new ArrayList<Map<String, String>>();
   private final Builder builder;
   private File tmp;
   private File sstCache;
@@ -71,7 +71,7 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, AutoCloseable {
   }
 
   public StreamingWorkbookReader(Builder builder) {
-    this.sheets = new ArrayList<>();
+    this.sheets = new ArrayList<StreamingSheet>();
     this.builder = builder;
   }
 
@@ -129,7 +129,9 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, AutoCloseable {
       loadSheets(reader, sst, styles, builder.getRowCacheSize());
     } catch(IOException e) {
       throw new OpenException("Failed to open file", e);
-    } catch(OpenXML4JException | XMLStreamException e) {
+    } catch(OpenXML4JException e) {
+      throw new ReadException("Unable to read workbook", e);
+    } catch(XMLStreamException e) {
       throw new ReadException("Unable to read workbook", e);
     } catch(GeneralSecurityException e) {
       throw new ReadException("Unable to read workbook - Decryption failed", e);
@@ -151,7 +153,7 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, AutoCloseable {
     sheetProperties.clear();
     NodeList nl = searchForNodeList(document(reader.getWorkbookData()), "/workbook/sheets/sheet");
     for(int i = 0; i < nl.getLength(); i++) {
-      Map<String, String> props = new HashMap<>();
+      Map<String, String> props = new HashMap<String, String>();
       props.put("name", nl.item(i).getAttributes().getNamedItem("name").getTextContent());
 
       Node state = nl.item(i).getAttributes().getNamedItem("state");
@@ -195,7 +197,9 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, AutoCloseable {
 
   static File writeInputStreamToFile(InputStream is, int bufferSize) throws IOException {
     File f = Files.createTempFile("tmp-", ".xlsx").toFile();
-    try(FileOutputStream fos = new FileOutputStream(f)) {
+    FileOutputStream fos = null;
+    try {
+      fos = new FileOutputStream(f);
       int read;
       byte[] bytes = new byte[bufferSize];
       while((read = is.read(bytes)) != -1) {
@@ -203,8 +207,11 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, AutoCloseable {
       }
       is.close();
       fos.close();
-      return f;
+    } catch (IOException e) {
+    	is.close();
+    	fos.close();
     }
+    return f;
   }
 
   static class StreamingSheetIterator implements Iterator<Sheet> {

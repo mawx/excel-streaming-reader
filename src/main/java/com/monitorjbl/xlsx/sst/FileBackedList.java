@@ -37,7 +37,7 @@ public class FileBackedList<T> implements AutoCloseable {
   }
 
   private final Class<T> type;
-  private final List<Long> pointers = new ArrayList<>();
+  private final List<Long> pointers = new ArrayList<Long>();
   private final RandomAccessFile raf;
   private final FileChannel channel;
   private final Map<Integer, T> cache;
